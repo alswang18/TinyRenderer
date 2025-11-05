@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.21)
+
+project(TinyRenderer)
+
+set(CMAKE_CXX_STANDARD 20)
+
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+
+add_executable(TinyRenderer ${SOURCES})
+
+target_include_directories(TinyRenderer PRIVATE src)
+
+# For MSVC
+if(MSVC)
+    # Generate PDB in Release
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+
+    # Add /PROFILE for instrumentation profiling
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /PROFILE /OPT:REF /OPT:ICF")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /PROFILE /OPT:REF /OPT:ICF")
+endif()
