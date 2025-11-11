@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/bin/Debug/TinyRenderer",
+            "args": [],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": "build-debug"
+        },
+        {
+            "name": "debug (african head)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/bin/Debug/TinyRenderer",
+            "args": ["./obj/african_head/african_head.obj"],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": "build-debug"
+        }
+    ]
+}

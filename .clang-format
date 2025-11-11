@@ -1,0 +1,8 @@
+BraceWrapping:
+  AfterFunction: true
+  AfterControlStatement: Always
+  AfterClass: true
+  AfterStruct: true
+  AfterUnion: true
+
+BreakBeforeBraces: Allman

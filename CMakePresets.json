@@ -4,7 +4,7 @@
     {
       "name": "default",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
+      "binaryDir": "${sourceDir}/build/bin",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
@@ -13,7 +13,7 @@
     {
       "name": "debug",
       "inherits": "default",
-      "binaryDir": "${sourceDir}/build/debug",
+      "binaryDir": "${sourceDir}/build/bin/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -21,7 +21,7 @@
     {
       "name": "release",
       "inherits": "default",
-      "binaryDir": "${sourceDir}/build/release",
+      "binaryDir": "${sourceDir}/build/bin/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
