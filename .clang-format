@@ -6,3 +6,5 @@ BraceWrapping:
   AfterUnion: true
 
 BreakBeforeBraces: Allman
+IndentWidth: 4
+TabWidth: 4

@@ -15,32 +15,43 @@ constexpr TGAColor yellow = {0, 200, 255, 255};
 
 void line(int ax, int ay, int bx, int by, TGAImage &framebuffer, TGAColor color)
 {
-  bool steep = std::abs(ax - bx) < std::abs(ay - by);
-  if (steep)
-  { // if the line is steep, we transpose the image
-    std::swap(ax, ay);
-    std::swap(bx, by);
-  }
-  if (ax > bx)
-  { // make it left−to−right
-    std::swap(ax, bx);
-    std::swap(ay, by);
-  }
-  int y = ay;
-  int ierror = 0;
-  for (int x = ax; x <= bx; x++)
-  {
-    if (steep) // if transposed, de−transpose
-      framebuffer.set(y, x, color);
-    else
-      framebuffer.set(x, y, color);
-    ierror += 2 * std::abs(by - ay);
-    if (ierror > bx - ax)
-    {
-      y += by > ay ? 1 : -1;
-      ierror -= 2 * (bx - ax);
+    // Steep means the algorithm has more vertical than horizontal steps.
+    // We always want to iterate left to right on a single axis, so we transpose.
+    bool steep = std::abs(ax - bx) < std::abs(ay - by);
+    if (steep)
+    { // if the line is steep, we transpose the image
+        std::swap(ax, ay);
+        std::swap(bx, by);
     }
-  }
+    if (ax > bx)
+    { // make it left−to−right
+        std::swap(ax, bx);
+        std::swap(ay, by);
+    }
+    int y = ay;
+    int ierror = 0;
+    for (int x = ax; x <= bx; x++)
+    {
+        if (steep) // if transposed, de−transpose
+            framebuffer.set(y, x, color);
+        else
+            framebuffer.set(x, y, color);
+        // We only have to move vertically by integer for y, so we just keep
+        // track of it.
+
+        // The naive solution is to accumulate an error of up to 0.5.
+        // so the error would be:
+        // float error += std::abs(by - ay) / std::abs(bx - ax);
+        // then when error > 0.5, we increment y by 1 and decrement error by 1.
+        // instead we check if 1 >= 2 * std::abs(by - ay) > std::abs(bx - ax)
+        // simplify more we get bx - ax >= 2 * std::abs(by - ay)
+        ierror += std::abs(by - ay);
+        if (ierror > bx - ax)
+        {
+            y += by > ay ? 1 : -1;
+            ierror -= (bx - ax);
+        }
+    }
 }
 
 std::tuple<int, int> project(vec3 v)
@@ -52,34 +63,32 @@ std::tuple<int, int> project(vec3 v)
                                     // then scale it to span the entire screen.
 }
 
+void triangle(int ax, int ay, int bx, int by, int cx, int cy,
+              TGAImage &framebuffer, TGAColor color)
+{
+    int bbminx =
+        std::min(std::min(ax, bx), cx); // bounding box for the triangle
+    int bbminy =
+        std::min(std::min(ay, by),
+                 cy); // defined by its top left and bottom right corners
+    int bbmaxx = std::max(std::max(ax, bx), cx);
+    int bbmaxy = std::max(std::max(ay, by), cy);
+
+    for (int x = bbminx; x <= bbmaxx; x++)
+    {
+        for (int y = bbminy; y <= bbmaxy; y++)
+        {
+            framebuffer.set(x, y, color);
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
-  if (argc != 2)
-  {
-    std::cerr << "Usage: " << argv[0] << " obj/model.obj" << std::endl;
-    return 1;
-  }
-
-  Model model(argv[1]);
-  TGAImage framebuffer(width, height, TGAImage::RGB);
-
-  for (int i = 0; i < model.nfaces(); i++)
-  { // iterate through all triangles
-    auto [ax, ay] = project(model.vert(i, 0));
-    auto [bx, by] = project(model.vert(i, 1));
-    auto [cx, cy] = project(model.vert(i, 2));
-    line(ax, ay, bx, by, framebuffer, red);
-    line(bx, by, cx, cy, framebuffer, red);
-    line(cx, cy, ax, ay, framebuffer, red);
-  }
-
-  for (int i = 0; i < model.nverts(); i++)
-  {                           // iterate through all vertices
-    vec3 v = model.vert(i);   // get i-th vertex
-    auto [x, y] = project(v); // project it to the screen
-    framebuffer.set(x, y, white);
-  }
-
-  framebuffer.write_tga_file("framebuffer.tga");
-  return 0;
+    TGAImage framebuffer(width, height, TGAImage::RGB);
+    triangle(7, 45, 35, 100, 45, 60, framebuffer, red);
+    triangle(120, 35, 90, 5, 45, 110, framebuffer, white);
+    triangle(115, 83, 80, 90, 85, 120, framebuffer, green);
+    framebuffer.write_tga_file("framebuffer.tga");
+    return 0;
 }

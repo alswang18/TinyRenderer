@@ -1,3 +1,5 @@
+set shell := ["powershell.exe", "-c"]
+
 cfg-debug:
     cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 
@@ -24,5 +26,4 @@ clean:
     rm -rf build
 
 clean-win:
-    #!/usr/bin/env pwsh
-    if (Test-Path build) { Remove-Item -Recurse -Force build }
+    Remove-Item -Recurse -Force build
