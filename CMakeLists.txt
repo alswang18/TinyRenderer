@@ -4,9 +4,6 @@ project(TinyRenderer)
 
 set(CMAKE_CXX_STANDARD 20)
 
-# Find OpenMP package
-find_package(OpenMP REQUIRED)
-
 # Output directories based on build type
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/$<CONFIG>")
@@ -19,9 +16,6 @@ add_executable(TinyRenderer ${SOURCES})
 target_sources(TinyRenderer PRIVATE ${HEADERS})
 target_include_directories(TinyRenderer PRIVATE src)
 
-
-# Link OpenMP
-target_link_libraries(TinyRenderer PRIVATE OpenMP::OpenMP_CXX)
 
 target_compile_definitions(TinyRenderer PRIVATE
     $<$<CONFIG:Debug>:DEBUG_BUILD=1>
