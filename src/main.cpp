@@ -69,8 +69,8 @@ double signed_triangle_area(int ax, int ay, int bx, int by, int cx, int cy)
                  (ay - cy) * (ax + cx));
 }
 
-void triangle(int ax, int ay, int bx, int by, int cx, int cy,
-              TGAImage &framebuffer, TGAColor color)
+void triangle(int ax, int ay, TGAColor color_a, int bx, int by, TGAColor color_b, int cx, int cy, TGAColor color_c,
+              TGAImage &framebuffer)
 {
     int bbminx =
         std::min(std::min(ax, bx), cx); // bounding box for the triangle
@@ -80,6 +80,27 @@ void triangle(int ax, int ay, int bx, int by, int cx, int cy,
     int bbmaxx = std::max(std::max(ax, bx), cx);
     int bbmaxy = std::max(std::max(ay, by), cy);
     double total_area = signed_triangle_area(ax, ay, bx, by, cx, cy);
+
+    float scale = 0.5f;
+
+    // Calculate centroid (geometric center)
+    double center_x = (ax + bx + cx) / 3.0;
+    double center_y = (ay + by + cy) / 3.0;
+
+    // Calculate inner triangle vertices by scaling toward center
+    int inner_ax = static_cast<int>(center_x + scale * (ax - center_x));
+    int inner_ay = static_cast<int>(center_y + scale * (ay - center_y));
+
+    int inner_bx = static_cast<int>(center_x + scale * (bx - center_x));
+    int inner_by = static_cast<int>(center_y + scale * (by - center_y));
+
+    int inner_cx = static_cast<int>(center_x + scale * (cx - center_x));
+    int inner_cy = static_cast<int>(center_y + scale * (cy - center_y));
+
+    double inner_total_area = signed_triangle_area(
+        inner_ax, inner_ay, inner_bx, inner_by, inner_cx, inner_cy);
+
+    if (total_area<1) return; // backface culling + discarding triangles that cover less than a pixel
 
     for (int x = bbminx; x <= bbmaxx; x++)
     {
@@ -94,17 +115,61 @@ void triangle(int ax, int ay, int bx, int by, int cx, int cy,
             if (alpha < 0 || beta < 0 || gamma < 0)
                 continue; // negative barycentric coordinate => the pixel is
                           // outside the triangle
-            framebuffer.set(x, y, color);
+
+            // Check inner triangle (the hole)
+            double inner_alpha = signed_triangle_area(x, y, inner_bx, inner_by,
+                                                      inner_cx, inner_cy) /
+                                 inner_total_area;
+            double inner_beta = signed_triangle_area(x, y, inner_cx, inner_cy,
+                                                     inner_ax, inner_ay) /
+                                inner_total_area;
+            double inner_gamma = signed_triangle_area(x, y, inner_ax, inner_ay,
+                                                      inner_bx, inner_by) /
+                                 inner_total_area;
+
+            if (inner_alpha >= 0 && inner_beta >= 0 && inner_gamma >= 0)
+                continue; // Inside inner triangle - create hole
+
+            // Calculate actual geometric center
+            double center_x = (ax + bx + cx) / 3.0;
+            double center_y = (ay + by + cy) / 3.0;
+
+            unsigned char r = static_cast<unsigned char>(
+                alpha * color_a.bgra[2] + beta * color_b.bgra[2] +
+                gamma * color_c.bgra[2]);
+
+            unsigned char g = static_cast<unsigned char>(
+                alpha * color_a.bgra[1] + beta * color_b.bgra[1] +
+                gamma * color_c.bgra[1]);
+
+            unsigned char b = static_cast<unsigned char>(
+                alpha * color_a.bgra[0] + beta * color_b.bgra[0] +
+                gamma * color_c.bgra[0]);
+
+            TGAColor pixel_color = TGAColor();
+            pixel_color.bgra[3] = 255;
+            pixel_color.bgra[2] = r;
+            pixel_color.bgra[1] = g;
+            pixel_color.bgra[0] = b;
+
+            framebuffer.set(x, y, pixel_color);
+
         }
     }
 }
 
 int main(int argc, char **argv)
 {
+    constexpr int width  = 64;
+    constexpr int height = 64;
     TGAImage framebuffer(width, height, TGAImage::RGB);
-    triangle(7, 45, 35, 100, 45, 60, framebuffer, red);
-    triangle(120, 35, 90, 5, 45, 110, framebuffer, white);
-    triangle(115, 83, 80, 90, 85, 120, framebuffer, green);
+
+    int ax = 17, ay =  4, az = 13;
+    int bx = 55, by = 39, bz = 128;
+    int cx = 23, cy = 59, cz = 255;
+
+    triangle(ax, ay, TGAColor::blue(), bx, by, TGAColor::green(), cx, cy, TGAColor::red(), framebuffer);
+
     framebuffer.write_tga_file("framebuffer.tga");
     return 0;
 }
